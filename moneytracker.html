@@ -1,0 +1,526 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Money Tracker</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f6fb;
+    color: #222;
+    padding: 30px 15px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+header {
+    margin-bottom: 25px;
+}
+
+header h1 {
+    color: #183b70;
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #777;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #00000008;
+}
+
+.card p {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.card h2 {
+    font-size: 23px;
+    overflow-wrap: anywhere;
+}
+
+.balance {
+    border-left: 5px solid #2563eb;
+}
+
+.income {
+    border-left: 5px solid #16a34a;
+}
+
+.expense {
+    border-left: 5px solid #dc2626;
+}
+
+.panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px #00000008;
+}
+
+.panel h2 {
+    margin-bottom: 20px;
+    color: #183b70;
+}
+
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field.full {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+input, select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 15px;
+    width: 100%;
+}
+
+input:focus, select:focus {
+    outline: 2px solid #93b4f5;
+    border-color: #2563eb;
+}
+
+button {
+    padding: 13px;
+    border: none;
+    border-radius: 7px;
+    background: #2563eb;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+#transactionList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.transaction-info h3 {
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.transaction-info small {
+    color: #888;
+}
+
+.transaction-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.amount {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.amount.in {
+    color: #16a34a;
+}
+
+.amount.out {
+    color: #dc2626;
+}
+
+.delete-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 25px;
+}
+
+footer {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    margin-top: 25px;
+}
+
+@media (max-width: 600px) {
+    .summary {
+        grid-template-columns: 1fr;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+    }
+
+    .field.full {
+        grid-column: auto;
+    }
+
+    .transaction {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .transaction-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <h1>Smart Money Tracker 💰</h1>
+    <p>Kelola pemasukan dan pengeluaran uangmu dengan mudah.</p>
+</header>
+
+<section class="summary">
+
+    <div class="card balance">
+        <p>Total Saldo</p>
+        <h2 id="balance">Rp0</h2>
+    </div>
+
+    <div class="card income">
+        <p>Total Pemasukan</p>
+        <h2 id="totalIncome">Rp0</h2>
+    </div>
+
+    <div class="card expense">
+        <p>Total Pengeluaran</p>
+        <h2 id="totalExpense">Rp0</h2>
+    </div>
+
+</section>
+
+<section class="panel">
+
+    <h2>Tambah Transaksi</h2>
+
+    <form id="moneyForm">
+
+        <div class="field">
+            <label for="description">Keterangan</label>
+            <input
+                type="text"
+                id="description"
+                placeholder="Contoh: Uang jajan"
+                required
+            >
+        </div>
+
+        <div class="field">
+            <label for="amount">Nominal (Rp)</label>
+            <input
+                type="number"
+                id="amount"
+                placeholder="Contoh: 50000"
+                min="1"
+                step="1"
+                required
+            >
+        </div>
+
+        <div class="field">
+            <label for="type">Jenis Transaksi</label>
+            <select id="type">
+                <option value="income">Uang Masuk</option>
+                <option value="expense">Uang Keluar</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="date">Tanggal</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="field full">
+            <button type="submit">+ Simpan Transaksi</button>
+        </div>
+
+    </form>
+
+</section>
+
+<section class="panel">
+
+    <h2>Riwayat Transaksi</h2>
+
+    <div id="transactionList">
+        <p class="empty">Belum ada transaksi.</p>
+    </div>
+
+</section>
+
+<footer>
+    Smart Money Tracker © 2026
+</footer>
+
+</div>
+
+<script>
+
+// Mengambil data transaksi dari penyimpanan browser
+let transactions = [];
+
+try {
+    const savedData = JSON.parse(
+        localStorage.getItem("moneyTransactions")
+    );
+
+    if (Array.isArray(savedData)) {
+        transactions = savedData.filter(item =>
+            item &&
+            typeof item.id === "string" &&
+            typeof item.description === "string" &&
+            Number.isSafeInteger(item.amount) &&
+            item.amount > 0 &&
+            ["income", "expense"].includes(item.type) &&
+            typeof item.date === "string"
+        );
+    }
+} catch (error) {
+    transactions = [];
+}
+
+// Format uang menjadi Rupiah
+function formatRupiah(number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+    }).format(number);
+}
+
+// Mengatur tanggal menjadi hari ini
+document.getElementById("date").value =
+    new Date().toLocaleDateString("en-CA");
+
+// Menyimpan transaksi
+document.getElementById("moneyForm").addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+        const description =
+            document.getElementById("description").value.trim();
+
+        const amount =
+            Number(document.getElementById("amount").value);
+
+        const type =
+            document.getElementById("type").value;
+
+        const date =
+            document.getElementById("date").value;
+
+        if (!description || !Number.isSafeInteger(amount) ||
+            amount <= 0 || !date) {
+            alert("Periksa kembali data transaksi kamu!");
+            return;
+        }
+
+        const transaction = {
+            id: crypto.randomUUID(),
+            description: description,
+            amount: amount,
+            type: type,
+            date: date
+        };
+
+        transactions.unshift(transaction);
+
+        saveData();
+
+        document.getElementById("moneyForm").reset();
+
+        document.getElementById("date").value =
+            new Date().toLocaleDateString("en-CA");
+
+        updateDisplay();
+    }
+);
+
+// Menyimpan data ke browser
+function saveData() {
+    localStorage.setItem(
+        "moneyTransactions",
+        JSON.stringify(transactions)
+    );
+}
+
+// Menghitung saldo dan total transaksi
+function updateDisplay() {
+
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    transactions.forEach(function(item) {
+
+        if (item.type === "income") {
+            totalIncome += item.amount;
+        } else {
+            totalExpense += item.amount;
+        }
+
+    });
+
+    const balance = totalIncome - totalExpense;
+
+    document.getElementById("balance").textContent =
+        formatRupiah(balance);
+
+    document.getElementById("totalIncome").textContent =
+        formatRupiah(totalIncome);
+
+    document.getElementById("totalExpense").textContent =
+        formatRupiah(totalExpense);
+
+    showTransactions();
+}
+
+// Menampilkan riwayat transaksi
+function showTransactions() {
+
+    const list = document.getElementById("transactionList");
+
+    list.replaceChildren();
+
+    if (transactions.length === 0) {
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = "Belum ada transaksi.";
+        list.appendChild(message);
+        return;
+    }
+
+    transactions.forEach(function(item) {
+
+        const card = document.createElement("div");
+        card.className = "transaction";
+
+        const info = document.createElement("div");
+        info.className = "transaction-info";
+
+        const title = document.createElement("h3");
+        title.textContent = item.description;
+
+        const date = document.createElement("small");
+        date.textContent = item.date;
+
+        info.appendChild(title);
+        info.appendChild(date);
+
+        const right = document.createElement("div");
+        right.className = "transaction-right";
+
+        const amount = document.createElement("span");
+        amount.className = "amount " +
+            (item.type === "income" ? "in" : "out");
+
+        amount.textContent =
+            (item.type === "income" ? "+ " : "- ") +
+            formatRupiah(item.amount);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-btn";
+        deleteButton.textContent = "Hapus";
+
+        deleteButton.addEventListener("click", function() {
+
+            const confirmDelete = confirm(
+                "Yakin ingin menghapus transaksi ini?"
+            );
+
+            if (confirmDelete) {
+                transactions = transactions.filter(
+                    transaction => transaction.id !== item.id
+                );
+
+                saveData();
+                updateDisplay();
+            }
+
+        });
+
+        right.appendChild(amount);
+        right.appendChild(deleteButton);
+
+        card.appendChild(info);
+        card.appendChild(right);
+
+        list.appendChild(card);
+
+    });
+}
+
+// Menampilkan data saat website dibuka
+updateDisplay();
+
+</script>
+
+</body>
+</html>
